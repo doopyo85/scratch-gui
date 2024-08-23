@@ -105,7 +105,6 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 this.props.onActivateTab(BLOCKS_TAB_INDEX);
             }
         }
-
         fetchProject(projectId, loadingState) {
             const urlHash = window.location.hash;
             console.log('URL Hash:', urlHash);
@@ -136,6 +135,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                         log.error(`Failed to fetch project from ${projectUrl}: ${error}`);
                     });
             } else {
+                // 기존의 프로젝트 로딩 로직
                 storage
                     .load(storage.AssetType.Project, projectId, storage.DataFormat.JSON)
                     .then(projectAsset => {
