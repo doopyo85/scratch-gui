@@ -28,6 +28,7 @@ import DeletionRestorer from '../../containers/deletion-restorer.jsx';
 import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
+import profileIcon from './icon--profile.png';  // 프로필 아이콘 이미지 경로를 적절히 수정해주세요
 
 import {openTipsLibrary} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -627,20 +628,16 @@ class MenuBar extends React.Component {
                         {this.props.sessionExists ? (
                             this.props.username ? (
                                 <React.Fragment>
-                                    <a href="/mystuff/">
-                                        <div
-                                            className={classNames(
-                                                styles.menuBarItem,
-                                                styles.hoverable,
-                                                styles.mystuffButton
-                                            )}
-                                        >
-                                            <img
-                                                className={styles.mystuffIcon}
-                                                src={mystuffIcon}
-                                            />
-                                        </div>
-                                    </a>
+                                    <div className={classNames(styles.menuBarItem, styles.hoverable, styles.accountInfoGroup)}>
+                                        <img
+                                            className={styles.profileIcon}
+                                            src={profileIcon}
+                                            alt="Profile"
+                                        />
+                                        <span className={styles.profileName}>
+                                            {this.props.username}
+                                        </span>
+                                    </div>
                                     <AccountNav
                                         className={classNames(
                                             styles.menuBarItem,
