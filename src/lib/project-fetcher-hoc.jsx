@@ -50,30 +50,43 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         componentDidMount() {
             this.fetchSessionData();
         }
-
+        
         fetchSessionData() {
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
-
+        
             if (token) {
                 try {
                     const decodedToken = jwt_decode(token);
+                    console.log('Decoded token:', decodedToken);  // 디버깅을 위한 로그
                     this.props.onSetSessionData(decodedToken);
                 } catch (error) {
                     console.error('Failed to decode token:', error);
                 }
             } else {
-                fetch('/get-user-session', {
-                    credentials: 'include',
-                    headers: {
-                        'Authorization': `Bearer ${document.cookie.split('token=')[1].split(';')[0]}`
-                    }
-                })
-                .then(res => res.json())
-                .then(sessionData => {
-                    this.props.onSetSessionData(sessionData);
-                })
-                .catch(err => console.error('Failed to fetch session data:', err));
+                const cookieToken = document.cookie.split('token=')[1]?.split(';')[0];
+                if (cookieToken) {
+                    fetch('https://codingnplay.site/get-user-session', {  // 전체 URL 사용
+                        credentials: 'include',
+                        headers: {
+                            'Authorization': `Bearer ${cookieToken}`
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(sessionData => {
+                        console.log('Session data:', sessionData);  // 디버깅을 위한 로그
+                        this.props.onSetSessionData(sessionData);
+                    })
+                    .catch(err => {
+                        console.error('Failed to fetch session data:', err);
+                        // 오류 발생 시 사용자에게 알림
+                        this.setState({ error: '세션 데이터를 가져오는데 실패했습니다.' });
+                    });
+                } else {
+                    console.log('No token found in cookie');
+                    // 토큰이 없을 때 처리
+                    this.setState({ error: '로그인 정보가 없습니다.' });
+                }
             }
         }
 
