@@ -49,44 +49,33 @@ const ProjectFetcherHOC = function (WrappedComponent) {
 
  import jwtDecode from 'jwt-decode';
 
-            fetchSessionData() {
-                // 쿠키에서 토큰 찾기
-                const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-            
-                if (cookieToken) {
-                    try {
-                        const decodedToken = jwtDecode(cookieToken);
-                        console.log('Decoded cookie token:', decodedToken);
-                        this.props.onSetSessionData(decodedToken);
-                    } catch (error) {
-                        console.error('Failed to decode cookie token:', error);
-                        this.fetchSessionFromServer();
-                    }
-                } else {
-                    console.log('No token found in cookie');
+         fetchSessionData() {
+            const token = window.JWT_TOKEN;
+            if (token) {
+                try {
+                    const decodedToken = jwtDecode(token);
+                    console.log('Decoded token:', decodedToken);
+                    this.props.onSetSessionData(decodedToken);
+                } catch (error) {
+                    console.error('Failed to decode token:', error);
                     this.fetchSessionFromServer();
                 }
+            } else {
+                this.fetchSessionFromServer();
             }
-            
-            fetchSessionFromServer() {
-                fetch('https://codingnplay.site/get-user-session', {
-                    credentials: 'include'
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Server responded with status: ' + res.status);
-                    }
-                    return res.json();
-                })
-                .then(sessionData => {
-                    console.log('Session data:', sessionData);
-                    this.props.onSetSessionData(sessionData);
-                })
-                .catch(err => {
-                    console.error('Failed to fetch session data:', err);
-                    // 여기에 에러 처리 로직 추가 (예: 로그인 페이지로 리다이렉트)
-                });
-            }
+        }
+        
+        fetchSessionFromServer() {
+            fetch('https://codingnplay.site/get-user-session', {
+                credentials: 'include'
+            })
+            .then(res => res.json())
+            .then(sessionData => {
+                console.log('Session data:', sessionData);
+                this.props.onSetSessionData(sessionData);
+            })
+            .catch(err => console.error('Failed to fetch session data:', err));
+        }
 
         componentDidUpdate(prevProps) {
             if (prevProps.projectHost !== this.props.projectHost) {
