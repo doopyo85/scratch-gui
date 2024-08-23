@@ -1,4 +1,3 @@
-// src/reducers/session.js
 const initialState = {
   user: null
 };
