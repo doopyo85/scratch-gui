@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {intlShape, injectIntl} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
-import jwtdecode from 'jwt-decode';
+import jwtDecode from 'jwt-decode';
 
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
@@ -46,35 +46,44 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 this.props.setProjectId(props.projectId.toString());
             }
         }
-
- import jwtDecode from 'jwt-decode';
-
-         fetchSessionData() {
-            const token = window.JWT_TOKEN;
-            if (token) {
+        
+        fetchSessionData() {
+            // 쿠키에서 토큰 찾기
+            const cookieToken = window.document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        
+            if (cookieToken) {
                 try {
-                    const decodedToken = jwtDecode(token);
-                    console.log('Decoded token:', decodedToken);
+                    const decodedToken = jwtDecode(cookieToken);
+                    console.log('Decoded cookie token:', decodedToken);
                     this.props.onSetSessionData(decodedToken);
                 } catch (error) {
-                    console.error('Failed to decode token:', error);
+                    console.error('Failed to decode cookie token:', error);
                     this.fetchSessionFromServer();
                 }
             } else {
+                console.log('No token found in cookie');
                 this.fetchSessionFromServer();
             }
         }
         
         fetchSessionFromServer() {
-            fetch('https://codingnplay.site/get-user-session', {
+            window.fetch('https://codingnplay.site/get-user-session', {
                 credentials: 'include'
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Server responded with status: ' + res.status);
+                }
+                return res.json();
+            })
             .then(sessionData => {
                 console.log('Session data:', sessionData);
                 this.props.onSetSessionData(sessionData);
             })
-            .catch(err => console.error('Failed to fetch session data:', err));
+            .catch(err => {
+                console.error('Failed to fetch session data:', err);
+                // 여기에 에러 처리 로직 추가 (예: 로그인 페이지로 리다이렉트)
+            });
         }
 
         componentDidUpdate(prevProps) {
