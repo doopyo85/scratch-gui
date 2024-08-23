@@ -28,6 +28,7 @@ import toolboxReducer, {toolboxInitialState} from './toolbox';
 import vmReducer, {vmInitialState} from './vm';
 import vmStatusReducer, {vmStatusInitialState} from './vm-status';
 import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace-metrics';
+import sessionReducer, {sessionInitialState} from './session';
 import throttle from 'redux-throttle';
 
 import decks from '../lib/libraries/decks/index.jsx';
@@ -63,7 +64,8 @@ const guiInitialState = {
     toolbox: toolboxInitialState,
     vm: vmInitialState,
     vmStatus: vmStatusInitialState,
-    workspaceMetrics: workspaceMetricsInitialState
+    workspaceMetrics: workspaceMetricsInitialState,
+    session: sessionInitialState
 };
 
 const initPlayer = function (currentState) {
@@ -73,8 +75,6 @@ const initPlayer = function (currentState) {
         {mode: {
             isFullScreen: currentState.mode.isFullScreen,
             isPlayerOnly: true,
-            // When initializing in player mode, make sure to reset
-            // hasEverEnteredEditorMode
             hasEverEnteredEditor: false
         }}
     );
@@ -129,7 +129,7 @@ const initTelemetryModal = function (currentState) {
         currentState,
         {
             modals: {
-                telemetryModal: true // this key must match `MODAL_TELEMETRY` in modals.js
+                telemetryModal: true
             }
         }
     );
@@ -164,7 +164,8 @@ const guiReducer = combineReducers({
     toolbox: toolboxReducer,
     vm: vmReducer,
     vmStatus: vmStatusReducer,
-    workspaceMetrics: workspaceMetricsReducer
+    workspaceMetrics: workspaceMetricsReducer,
+    session: sessionReducer
 });
 
 export {
