@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import {intlShape, injectIntl} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
-import jwtDecode from 'jwt-decode';
-
+import { jwtDecode } from 'jwt-decode';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
     LoadingStates,
