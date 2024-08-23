@@ -47,45 +47,46 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
         }
 
-        componentDidMount() {
-            this.fetchSessionData();
-        }
-        
+ import jwtDecode from 'jwt-decode';
+
         fetchSessionData() {
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
         
             if (token) {
                 try {
-                    const decodedToken = jwt_decode(token);
-                    console.log('Decoded token:', decodedToken);  // 디버깅을 위한 로그
+                    const decodedToken = jwtDecode(token);
+                    console.log('Decoded token:', decodedToken);
                     this.props.onSetSessionData(decodedToken);
                 } catch (error) {
                     console.error('Failed to decode token:', error);
                 }
             } else {
-                const cookieToken = document.cookie.split('token=')[1]?.split(';')[0];
+                // 쿠키에서 토큰 찾기
+                const cookies = document.cookie.split(';');
+                const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+                const cookieToken = tokenCookie ? tokenCookie.split('=')[1] : null;
+        
                 if (cookieToken) {
-                    fetch('https://codingnplay.site/get-user-session', {  // 전체 URL 사용
-                        credentials: 'include',
-                        headers: {
-                            'Authorization': `Bearer ${cookieToken}`
-                        }
+                    try {
+                        const decodedToken = jwtDecode(cookieToken);
+                        console.log('Decoded cookie token:', decodedToken);
+                        this.props.onSetSessionData(decodedToken);
+                    } catch (error) {
+                        console.error('Failed to decode cookie token:', error);
+                    }
+                } else {
+                    console.log('No token found in URL or cookie');
+                    // 서버에 세션 정보 요청
+                    fetch('https://codingnplay.site/get-user-session', {
+                        credentials: 'include'
                     })
                     .then(res => res.json())
                     .then(sessionData => {
-                        console.log('Session data:', sessionData);  // 디버깅을 위한 로그
+                        console.log('Session data:', sessionData);
                         this.props.onSetSessionData(sessionData);
                     })
-                    .catch(err => {
-                        console.error('Failed to fetch session data:', err);
-                        // 오류 발생 시 사용자에게 알림
-                        this.setState({ error: '세션 데이터를 가져오는데 실패했습니다.' });
-                    });
-                } else {
-                    console.log('No token found in cookie');
-                    // 토큰이 없을 때 처리
-                    this.setState({ error: '로그인 정보가 없습니다.' });
+                    .catch(err => console.error('Failed to fetch session data:', err));
                 }
             }
         }
