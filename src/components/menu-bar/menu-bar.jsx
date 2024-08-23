@@ -28,8 +28,6 @@ import DeletionRestorer from '../../containers/deletion-restorer.jsx';
 import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
-import profileIcon from './icon--profile.png';  // 프로필 아이콘 이미지 경로를 적절히 수정해주세요
-
 import {openTipsLibrary} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
 import {
@@ -631,7 +629,7 @@ class MenuBar extends React.Component {
                                     <div className={classNames(styles.menuBarItem, styles.hoverable, styles.accountInfoGroup)}>
                                         <img
                                             className={styles.profileIcon}
-                                            src={profileIcon}
+                                            src={mystuffIcon}  // profileIcon 대신 mystuffIcon 사용
                                             alt="Profile"
                                         />
                                         <span className={styles.profileName}>
