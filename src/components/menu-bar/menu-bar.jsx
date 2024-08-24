@@ -814,6 +814,7 @@ const mapDispatchToProps = dispatch => ({
     onClickRemix: () => dispatch(remixProject()),
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
+    onSetSessionData: data => dispatch(setSessionData(data)), // 전두표 추가
     onSeeCommunity: () => dispatch(setPlayer(true))
 });
 
