@@ -128,7 +128,13 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             if (urlHash.startsWith('#http') || (projectId === null && urlHash.startsWith('#http'))) {
                 const projectUrl = urlHash.substring(1); 
                 console.log('Loading project from URL:', projectUrl);
-            fetch(projectUrl)
+            fetch(projectUrl, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Origin': 'https://codingnplay.site'
+                }
+            })
                 .then(response => {
                     console.log('Response status:', response.status);
                     console.log('Response headers:', response.headers);
