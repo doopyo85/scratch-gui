@@ -46,7 +46,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
         }
         
-        fetchSessionData() {
+         fetchSessionData() {
             // 쿠키에서 토큰 찾기
             const cookieToken = window.document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
         
@@ -54,7 +54,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 try {
                     const decodedToken = jwtDecode(cookieToken);
                     console.log('Decoded cookie token:', decodedToken);
-                    this.props.onSetSessionData(decodedToken);
+                    if (this.props.onSetSessionData) {
+                        this.props.onSetSessionData(decodedToken);
+                    } else {
+                        console.warn('onSetSessionData is not provided as a prop');
+                    }
                 } catch (error) {
                     console.error('Failed to decode cookie token:', error);
                     this.fetchSessionFromServer();
@@ -77,7 +81,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             })
             .then(sessionData => {
                 console.log('Session data:', sessionData);
-                this.props.onSetSessionData(sessionData);
+                if (this.props.onSetSessionData) {
+                    this.props.onSetSessionData(sessionData);
+                } else {
+                    console.warn('onSetSessionData is not provided as a prop');
+                }
             })
             .catch(err => {
                 console.error('Failed to fetch session data:', err);
@@ -193,7 +201,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: PropTypes.func,
         onFetchedProjectData: PropTypes.func,
         onProjectUnchanged: PropTypes.func,
-        onSetSessionData: PropTypes.func.isRequired,
+        onSetSessionData: PropTypes.func,
         projectHost: PropTypes.string,
         projectToken: PropTypes.string,
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
