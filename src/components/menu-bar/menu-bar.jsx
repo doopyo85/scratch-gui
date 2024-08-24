@@ -13,7 +13,6 @@ import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import CommunityButton from './community-button.jsx';
 import ShareButton from './share-button.jsx';
-import {ComingSoonTooltip} from '../coming-soon/coming-soon.jsx';
 import Divider from '../divider/divider.jsx';
 import SaveStatus from './save-status.jsx';
 import ProjectWatcher from '../../containers/project-watcher.jsx';
@@ -99,59 +98,6 @@ const ariaMessages = defineMessages({
         description: 'accessibility text for the tutorials button'
     }
 });
-
-const MenuBarItemTooltip = ({
-    children,
-    className,
-    enable,
-    id,
-    place = 'bottom'
-}) => {
-    if (enable) {
-        return (
-            <React.Fragment>
-                {children}
-            </React.Fragment>
-        );
-    }
-    return (
-        <ComingSoonTooltip
-            className={classNames(styles.comingSoon, className)}
-            place={place}
-            tooltipClassName={styles.comingSoonTooltip}
-            tooltipId={id}
-        >
-            {children}
-        </ComingSoonTooltip>
-    );
-};
-
-MenuBarItemTooltip.propTypes = {
-    children: PropTypes.node,
-    className: PropTypes.string,
-    enable: PropTypes.bool,
-    id: PropTypes.string,
-    place: PropTypes.oneOf(['top', 'bottom', 'left', 'right'])
-};
-
-const MenuItemTooltip = ({id, isRtl, children, className}) => (
-    <ComingSoonTooltip
-        className={classNames(styles.comingSoon, className)}
-        isRtl={isRtl}
-        place={isRtl ? 'left' : 'right'}
-        tooltipClassName={styles.comingSoonTooltip}
-        tooltipId={id}
-    >
-        {children}
-    </ComingSoonTooltip>
-);
-
-MenuItemTooltip.propTypes = {
-    children: PropTypes.node,
-    className: PropTypes.string,
-    id: PropTypes.string,
-    isRtl: PropTypes.bool
-};
 
 const AboutButton = props => (
     <Button
@@ -629,7 +575,7 @@ class MenuBar extends React.Component {
                                     <div className={classNames(styles.menuBarItem, styles.hoverable, styles.accountInfoGroup)}>
                                         <img
                                             className={styles.profileIcon}
-                                            src={mystuffIcon}  // profileIcon 대신 mystuffIcon 사용
+                                            src={mystuffIcon}
                                             alt="Profile"
                                         />
                                         <span className={styles.profileName}>
@@ -775,7 +721,8 @@ MenuBar.defaultProps = {
 
 const mapStateToProps = (state, ownProps) => {
     const loadingState = state.scratchGui.projectState.loadingState;
-    const user = state.session && state.session.session && state.session.session.user;
+    const user = state.session && state.session.session && state.session.session.
+        user;
     const sessionData = state.scratchGui.session; // 새로 추가된 부분
 
     return {
