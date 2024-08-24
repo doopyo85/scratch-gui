@@ -815,6 +815,9 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSetSessionData: data => dispatch(setSessionData(data)), // 전두표 추가
+    onClickLogo: () => {
+        window.location.href = 'https://codingnplay.site/public/scratch.html';
+    }, //전두표 추가
     onSeeCommunity: () => dispatch(setPlayer(true))
 });
 
