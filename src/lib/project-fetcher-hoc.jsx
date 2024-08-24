@@ -11,7 +11,7 @@ import {
     getIsFetchingWithId,
     getIsLoading,
     getIsShowingProject,
-    onFetchedProjectData,
+    onFetchedProjectData,com
     projectError,
     setProjectId
 } from '../reducers/project-state';
@@ -92,6 +92,14 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 // 여기에 에러 처리 로직 추가 (예: 로그인 페이지로 리다이렉트)
             });
         }
+        
+        componentDidMount() {
+            const urlHash = window.location.hash;
+            if (urlHash.startsWith('#http')) {
+                const projectUrl = urlHash.substring(1);
+                this.fetchProject(null, this.props.loadingState);
+            }
+        }
 
         componentDidUpdate(prevProps) {
             if (prevProps.projectHost !== this.props.projectHost) {
@@ -117,7 +125,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             const urlHash = window.location.hash;
             console.log('URL Hash:', urlHash);
         
-            if (urlHash.startsWith('#http')) {
+            if (urlHash.startsWith('#http') || (projectId === null && urlHash.startsWith('#http'))) {
                 const projectUrl = urlHash.substring(1); 
                 console.log('Loading project from URL:', projectUrl);
                 fetch(projectUrl)
