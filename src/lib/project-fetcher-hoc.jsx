@@ -128,28 +128,31 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             if (urlHash.startsWith('#http') || (projectId === null && urlHash.startsWith('#http'))) {
                 const projectUrl = urlHash.substring(1); 
                 console.log('Loading project from URL:', projectUrl);
-                fetch(projectUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Failed to load project from ${projectUrl}`);
-                        }
-                        return response.arrayBuffer();
-                    })
-                    .then(arrayBuffer => {
-                        console.log('Project arrayBuffer loaded');
-                        this.props.onFetchedProjectData(arrayBuffer, loadingState);
-                        this.props.vm.loadProject(arrayBuffer)
-                            .then(() => {
-                                console.log(`Project loaded from ${projectUrl}`);
-                            })
-                            .catch(error => {
-                                console.error(`Error loading project from ${projectUrl}:`, error);
-                            });
-                    })
-                    .catch(error => {
-                        this.props.onError(error);
-                        log.error(`Failed to fetch project from ${projectUrl}: ${error}`);
-                    });
+            fetch(projectUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(arrayBuffer => {
+                    console.log('ArrayBuffer size:', arrayBuffer.byteLength);
+                    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+                        throw new Error('Received empty project data');
+                    }
+                    console.log('Project arrayBuffer loaded');
+                    return this.props.vm.loadProject(arrayBuffer);
+                })
+                .then(() => {
+                    console.log(`Project loaded from ${projectUrl}`);
+                    this.props.onFetchedProjectData(arrayBuffer, loadingState);
+                })
+                .catch(error => {
+                    console.error(`Error loading project from ${projectUrl}:`, error);
+                    this.props.onError(error);
+                });
             } else {
                 // 기존의 프로젝트 로딩 로직
                 storage
