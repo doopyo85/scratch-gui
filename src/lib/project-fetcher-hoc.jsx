@@ -11,7 +11,7 @@ import {
     getIsFetchingWithId,
     getIsLoading,
     getIsShowingProject,
-    onFetchedProjectData,com
+    onFetchedProjectData,
     projectError,
     setProjectId
 } from '../reducers/project-state';
