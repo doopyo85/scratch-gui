@@ -5,15 +5,15 @@ import Menu from '../../containers/menu.jsx';
 const MenuBarMenu = ({
     children,
     className,
-    onRequestClose,
-    open,
+    onRequestClose = () => {},  // 기본 닫기 함수 설정
+    open = false,  // 기본적으로 메뉴는 닫힌 상태로 설정
     place = 'right'
 }) => (
     <div className={className}>
         <Menu
             open={open}
             place={place}
-            onRequestClose={onRequestClose}
+            onRequestClose={onRequestClose}  // 항상 onRequestClose가 전달되도록 기본값 추가
         >
             {children}
         </Menu>
