@@ -11,6 +11,22 @@ const onClickLogo = () => {
     window.location = 'https://scratch.mit.edu';
 };
 
+// 프로젝트 파일을 URL에서 불러와서 VM에 로드하는 함수
+const onVmInit = (vm) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectFileUrl = urlParams.get('project_file');  // project_file 매개변수를 확인
+
+    if (projectFileUrl) {
+        fetch(projectFileUrl)  // 프로젝트 파일을 가져옴
+            .then(response => response.arrayBuffer())  // 파일을 arrayBuffer로 받음
+            .then(arrayBuffer => {
+                vm.loadProject(arrayBuffer);  // VM에 프로젝트 파일 로드
+                console.log('Project loaded successfully from:', projectFileUrl);
+            })
+            .catch(err => console.error('Error loading project:', err));
+    }
+};
+
 const handleTelemetryModalCancel = () => {
     log('User canceled telemetry modal');
 };
@@ -72,6 +88,7 @@ export default appTarget => {
                 onTelemetryModalCancel={handleTelemetryModalCancel}
                 onTelemetryModalOptIn={handleTelemetryModalOptIn}
                 onTelemetryModalOptOut={handleTelemetryModalOptOut}
+                onVmInit={onVmInit}  // VM 초기화 시 프로젝트 로드 함수 실행
             /> :
             <WrappedGui
                 canEditTitle
@@ -80,6 +97,7 @@ export default appTarget => {
                 backpackHost={backpackHost}
                 canSave={false}
                 onClickLogo={onClickLogo}
+                onVmInit={onVmInit}  // VM 초기화 시 프로젝트 로드 함수 실행
             />,
         appTarget);
 };
