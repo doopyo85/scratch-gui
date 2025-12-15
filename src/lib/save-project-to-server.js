@@ -1,63 +1,50 @@
-import queryString from 'query-string';
-import xhr from 'xhr';
-import storage from '../lib/storage';
-
 /**
- * Save a project JSON to the project server.
- * This should eventually live in scratch-www.
+ * Save a project JSON to the codingnplay server.
  * @param {number} projectId the ID of the project, null if a new project.
  * @param {object} vmState the JSON project representation.
  * @param {object} params the request params.
- * @property {?number} params.originalId the original project ID if a copy/remix.
- * @property {?boolean} params.isCopy a flag indicating if this save is creating a copy.
- * @property {?boolean} params.isRemix a flag indicating if this save is creating a remix.
- * @property {?string} params.title the title of the project.
  * @return {Promise} A promise that resolves when the network request resolves.
  */
 export default function (projectId, vmState, params) {
-    const opts = {
-        body: vmState,
-        // If we set json:true then the body is double-stringified, so don't
+    const creatingProject = projectId === null || typeof projectId === 'undefined';
+    
+    const requestBody = {
+        projectId: projectId,
+        projectData: vmState,
+        title: params.title || 'Untitled',
+        isNew: creatingProject,
+        isCopy: params.isCopy || false,
+        isRemix: params.isRemix || false,
+        originalId: params.originalId || null
+    };
+
+    const url = creatingProject 
+        ? '/api/scratch/save-project'
+        : `/api/scratch/save-project/${projectId}`;
+    
+    const method = creatingProject ? 'POST' : 'PUT';
+
+    return fetch(url, {
+        method: method,
+        credentials: 'include',  // 세션 쿠키 포함
         headers: {
             'Content-Type': 'application/json'
         },
-        withCredentials: true
-    };
-    const creatingProject = projectId === null || typeof projectId === 'undefined';
-    const queryParams = {};
-    if (Object.prototype.hasOwnProperty.call(params, 'originalId')) queryParams.original_id = params.originalId;
-    if (Object.prototype.hasOwnProperty.call(params, 'isCopy')) queryParams.is_copy = params.isCopy;
-    if (Object.prototype.hasOwnProperty.call(params, 'isRemix')) queryParams.is_remix = params.isRemix;
-    if (Object.prototype.hasOwnProperty.call(params, 'title')) queryParams.title = params.title;
-    let qs = queryString.stringify(queryParams);
-    if (qs) qs = `?${qs}`;
-    if (creatingProject) {
-        Object.assign(opts, {
-            method: 'post',
-            url: `${storage.projectHost}/${qs}`
-        });
-    } else {
-        Object.assign(opts, {
-            method: 'put',
-            url: `${storage.projectHost}/${projectId}${qs}`
-        });
-    }
-    return new Promise((resolve, reject) => {
-        xhr(opts, (err, response) => {
-            if (err) return reject(err);
-            if (response.statusCode !== 200) return reject(response.statusCode);
-            let body;
-            try {
-                // Since we didn't set json: true, we have to parse manually
-                body = JSON.parse(response.body);
-            } catch (e) {
-                return reject(e);
-            }
-            body.id = projectId;
-            if (creatingProject) {
-                body.id = body['content-name'];
-            }
-            resolve(body);
-        });
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.message || 'Project save failed');
+        }
+        return {
+            id: data.projectId,
+            'content-name': data.projectId
+        };
     });
 }
