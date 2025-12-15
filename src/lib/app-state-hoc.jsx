@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Provider} from 'react-redux';
-import {createStore, combineReducers, compose, applyMiddleware} from 'redux';
-import thunk from 'redux-thunk'; 
+import {createStore, combineReducers, compose} from 'redux';
 import ConnectedIntlProvider from './connected-intl-provider.jsx';
 
 import localesReducer, {initLocale, localesInitialState} from '../reducers/locales';
@@ -31,6 +30,9 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
             let reducers = {};
             let enhancer;
 
+            // localesOnly 값을 인스턴스 변수로 저장
+            this.localesOnly = localesOnly;
+
             let initializedLocales = localesInitialState;
             const locale = detectLocale(Object.keys(locales));
             if (locale !== 'en') {
@@ -41,9 +43,7 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
                 // browser modal
                 reducers = {locales: localesReducer};
                 initialState = {locales: initializedLocales};
-                enhancer = composeEnhancers(
-                    applyMiddleware(thunk),
-                    guiMiddleware
+                enhancer = composeEnhancers();
             } else {
                 // You are right, this is gross. But it's necessary to avoid
                 // importing unneeded code that will crash unsupported browsers.
@@ -87,8 +87,54 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
                 enhancer
             );
         }
+        
+        // ★ 새로 추가: 컴포넌트 마운트 시 세션 체크
+        componentDidMount () {
+            if (!this.localesOnly) {
+                this.fetchSessionFromServer();
+            }
+        }
+        
+        // ★ 새로 추가: 3000번 서버에서 세션 정보 가져오기
+        fetchSessionFromServer () {
+            const {setSession} = require('../reducers/session');
+            
+            fetch('/api/auth/session', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Session fetch failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.loggedIn && data.user) {
+                    this.store.dispatch(setSession(
+                        {
+                            username: data.user.userID,
+                            id: data.user.id,
+                            thumbnailUrl: data.user.profileImage || '/resource/profiles/default.webp',
+                            classroomId: data.user.centerID
+                        },
+                        {
+                            educator: data.user.role === 'teacher' || data.user.role === 'admin' || data.user.role === 'manager',
+                            student: data.user.role === 'student'
+                        }
+                    ));
+                }
+            })
+            .catch(error => {
+                console.error('Session fetch error:', error);
+            });
+        }
+        
         componentDidUpdate (prevProps) {
-            if (localesOnly) return;
+            if (this.localesOnly) return;
             if (prevProps.isPlayerOnly !== this.props.isPlayerOnly) {
                 this.store.dispatch(setPlayer(this.props.isPlayerOnly));
             }
