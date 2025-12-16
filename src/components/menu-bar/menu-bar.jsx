@@ -932,7 +932,9 @@ MenuBar.defaultProps = {
 
 const mapStateToProps = (state, ownProps) => {
     const loadingState = state.scratchGui.projectState.loadingState;
-    const user = state.session && state.session.session && state.session.session.user;
+    // ★ session은 scratchGui 아래에 있음
+    const sessionState = state.scratchGui.session;
+    const user = sessionState && sessionState.session && sessionState.session.user;
     return {
         aboutMenuOpen: aboutMenuOpen(state),
         accountMenuOpen: accountMenuOpen(state),
@@ -946,7 +948,8 @@ const mapStateToProps = (state, ownProps) => {
         loginMenuOpen: loginMenuOpen(state),
         modeMenuOpen: modeMenuOpen(state),
         projectTitle: state.scratchGui.projectTitle,
-        sessionExists: state.session && typeof state.session.session !== 'undefined',
+        // ★ session 경로 수정: state.session → state.scratchGui.session
+        sessionExists: sessionState && sessionState.session && sessionState.session.user !== null,
         settingsMenuOpen: settingsMenuOpen(state),
         username: user ? user.username : null,
         userOwnsProject: ownProps.authorUsername && user &&
