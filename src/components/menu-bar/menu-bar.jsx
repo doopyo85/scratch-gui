@@ -29,7 +29,7 @@ import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
 
-import {openTipsLibrary} from '../../reducers/modals';
+import {openTipsLibrary, openMyProjectsModal} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
@@ -253,16 +253,29 @@ class MenuBar extends React.Component {
         
         try {
             // VM에서 프로젝트 데이터 추출 (ArrayBuffer)
+            console.log('프로젝트 저장 시작...');
             const projectData = await this.props.vm.saveProjectSb3();
+            
+            // 프로젝트 데이터 검증
+            if (!projectData) {
+                throw new Error('프로젝트 데이터를 생성할 수 없습니다.');
+            }
+            
+            console.log('프로젝트 데이터 생성 완료, 크기:', projectData.byteLength, 'bytes');
+            
             const projectTitle = this.props.projectTitle || 'Untitled';
             
             // ArrayBuffer를 Base64로 변환
             const uint8Array = new Uint8Array(projectData);
             let binary = '';
-            uint8Array.forEach(byte => {
-                binary += String.fromCharCode(byte);
-            });
+            const chunkSize = 8192; // 청크 단위로 처리
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                const chunk = uint8Array.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
             const base64Data = btoa(binary);
+            
+            console.log('Base64 변환 완료, 전송 시작...');
             
             // JSON으로 서버에 전송
             const response = await fetch('/api/scratch/save-project', {
@@ -278,6 +291,10 @@ class MenuBar extends React.Component {
                 })
             });
             
+            if (!response.ok) {
+                throw new Error(`서버 응답 오류: ${response.status}`);
+            }
+            
             const result = await response.json();
             
             if (result.success) {
@@ -287,7 +304,7 @@ class MenuBar extends React.Component {
             }
         } catch (error) {
             console.error('Save to server error:', error);
-            alert('저장 중 오류가 발생했습니다.');
+            alert('저장 중 오류가 발생했습니다: ' + error.message);
         } finally {
             this.setState({ isSaving: false });
         }
@@ -763,20 +780,19 @@ class MenuBar extends React.Component {
                         this.props.username ? (
                             // ************ user is logged in ************
                             <React.Fragment>
-                                <a href="/mystuff/">
-                                    <div
-                                        className={classNames(
-                                            styles.menuBarItem,
-                                            styles.hoverable,
-                                            styles.mystuffButton
-                                        )}
-                                    >
-                                        <img
-                                            className={styles.mystuffIcon}
-                                            src={mystuffIcon}
-                                        />
-                                    </div>
-                                </a>
+                                <div
+                                    className={classNames(
+                                        styles.menuBarItem,
+                                        styles.hoverable,
+                                        styles.mystuffButton
+                                    )}
+                                    onClick={this.props.onOpenMyProjects}
+                                >
+                                    <img
+                                        className={styles.mystuffIcon}
+                                        src={mystuffIcon}
+                                    />
+                                </div>
                                 <AccountNav
                                     className={classNames(
                                         styles.menuBarItem
@@ -937,6 +953,7 @@ MenuBar.propTypes = {
     onClickSaveAsCopy: PropTypes.func,
     onClickSettings: PropTypes.func,
     onLogOut: PropTypes.func,
+    onOpenMyProjects: PropTypes.func,
     onOpenRegistration: PropTypes.func,
     onOpenTipLibrary: PropTypes.func,
     onProjectTelemetryEvent: PropTypes.func,
@@ -1020,6 +1037,7 @@ const mapDispatchToProps = dispatch => ({
     onClickSettings: () => dispatch(openSettingsMenu()),
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
     onClickNew: needSave => dispatch(requestNewProject(needSave)),
+    onOpenMyProjects: () => dispatch(openMyProjectsModal()),
     onClickRemix: () => dispatch(remixProject()),
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
