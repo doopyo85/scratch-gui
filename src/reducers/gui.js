@@ -30,7 +30,6 @@ import vmStatusReducer, {vmStatusInitialState} from './vm-status';
 import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace-metrics';
 import sessionReducer, {sessionInitialState} from './session';
 import throttle from 'redux-throttle';
-import sessionReducer, {sessionInitialState} from './session';
 
 import decks from '../lib/libraries/decks/index.jsx';
 

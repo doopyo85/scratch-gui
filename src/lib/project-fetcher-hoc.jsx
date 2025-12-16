@@ -20,7 +20,7 @@ import {
     BLOCKS_TAB_INDEX
 } from '../reducers/editor-tab';
 
-import { setSessionData } from '../reducers/session';
+import { setSession } from '../reducers/session';
 
 import log from './log';
 import storage from './storage';
@@ -248,7 +248,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: error => dispatch(projectError(error)),
         onFetchedProjectData: (projectData, loadingState) =>
             dispatch(onFetchedProjectData(projectData, loadingState)),
-        onSetSessionData: data => dispatch(setSessionData(data)),
+        onSetSessionData: data => dispatch(setSession(data)),
         setProjectId: projectId => dispatch(setProjectId(projectId)),
         onProjectUnchanged: () => dispatch(setProjectUnchanged())
     });
