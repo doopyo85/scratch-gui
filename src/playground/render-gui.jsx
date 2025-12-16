@@ -8,7 +8,7 @@ import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 
 const onClickLogo = () => {
-    window.location = 'https://scratch.mit.edu';
+    window.location.href = '/scratch_project';
 };
 
 // 프로젝트 파일을 URL에서 불러와서 VM에 로드하는 함수
