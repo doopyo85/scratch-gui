@@ -179,6 +179,7 @@ class MenuBar extends React.Component {
             'handleClickSeeCommunity',
             'handleClickShare',
             'handleClickSaveToServer',
+            'blobToBase64',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
@@ -245,6 +246,20 @@ class MenuBar extends React.Component {
         }
     }
     
+    // Blob을 Base64로 변환하는 헬퍼 함수
+    blobToBase64 (blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // data:application/...;base64,XXXXX 에서 base64 부분만 추출
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+    
     // S3 서버에 프로젝트 저장
     async handleClickSaveToServer () {
         if (this.state.isSaving) return;
@@ -252,28 +267,25 @@ class MenuBar extends React.Component {
         this.setState({ isSaving: true });
         
         try {
-            // VM에서 프로젝트 데이터 추출 (ArrayBuffer)
             console.log('프로젝트 저장 시작...');
-            const projectData = await this.props.vm.saveProjectSb3();
+            
+            // VM에서 프로젝트 데이터 추출 (Blob 반환)
+            const projectBlob = await this.props.vm.saveProjectSb3();
             
             // 프로젝트 데이터 검증
-            if (!projectData) {
+            if (!projectBlob) {
                 throw new Error('프로젝트 데이터를 생성할 수 없습니다.');
             }
             
-            console.log('프로젝트 데이터 생성 완료, 크기:', projectData.byteLength, 'bytes');
+            // Blob.size로 크기 확인 (Blob에는 byteLength가 없음)
+            const fileSize = projectBlob.size || projectBlob.byteLength;
+            console.log('프로젝트 데이터 생성 완료, 크기:', fileSize, 'bytes');
             
             const projectTitle = this.props.projectTitle || 'Untitled';
             
-            // ArrayBuffer를 Base64로 변환
-            const uint8Array = new Uint8Array(projectData);
-            let binary = '';
-            const chunkSize = 8192; // 청크 단위로 처리
-            for (let i = 0; i < uint8Array.length; i += chunkSize) {
-                const chunk = uint8Array.subarray(i, i + chunkSize);
-                binary += String.fromCharCode.apply(null, chunk);
-            }
-            const base64Data = btoa(binary);
+            // Blob을 Base64로 변환
+            console.log('Base64 변환 중...');
+            const base64Data = await this.blobToBase64(projectBlob);
             
             console.log('Base64 변환 완료, 전송 시작...');
             
@@ -292,7 +304,8 @@ class MenuBar extends React.Component {
             });
             
             if (!response.ok) {
-                throw new Error(`서버 응답 오류: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `서버 응답 오류: ${response.status}`);
             }
             
             const result = await response.json();
