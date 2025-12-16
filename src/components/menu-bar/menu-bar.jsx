@@ -178,12 +178,17 @@ class MenuBar extends React.Component {
             'handleClickSaveAsCopy',
             'handleClickSeeCommunity',
             'handleClickShare',
+            'handleClickSaveToServer',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
             'getSaveToComputerHandler',
             'restoreOptionMessage'
         ]);
+        
+        this.state = {
+            isSaving: false
+        };
     }
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyPress);
@@ -237,6 +242,54 @@ class MenuBar extends React.Component {
             } else {
                 waitForUpdate(false); // immediately transition to project page
             }
+        }
+    }
+    
+    // S3 서버에 프로젝트 저장
+    async handleClickSaveToServer () {
+        if (this.state.isSaving) return;
+        
+        this.setState({ isSaving: true });
+        
+        try {
+            // VM에서 프로젝트 데이터 추출 (ArrayBuffer)
+            const projectData = await this.props.vm.saveProjectSb3();
+            const projectTitle = this.props.projectTitle || 'Untitled';
+            
+            // ArrayBuffer를 Base64로 변환
+            const uint8Array = new Uint8Array(projectData);
+            let binary = '';
+            uint8Array.forEach(byte => {
+                binary += String.fromCharCode(byte);
+            });
+            const base64Data = btoa(binary);
+            
+            // JSON으로 서버에 전송
+            const response = await fetch('/api/scratch/save-project', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    projectData: base64Data,
+                    title: projectTitle,
+                    isNew: true
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('프로젝트가 저장되었습니다!');
+            } else {
+                alert('저장 실패: ' + (result.message || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Save to server error:', error);
+            alert('저장 중 오류가 발생했습니다.');
+        } finally {
+            this.setState({ isSaving: false });
         }
     }
     handleSetMode (mode) {
@@ -635,6 +688,15 @@ class MenuBar extends React.Component {
                         />
                     ) : null)}
                     <div className={classNames(styles.menuBarItem)}>
+                        {/* 저장 버튼 - 로그인 상태에서만 표시 */}
+                        {this.props.sessionExists && this.props.username && (
+                            <Button
+                                className={classNames(styles.menuBarButton, styles.saveButton)}
+                                onClick={this.handleClickSaveToServer}
+                            >
+                                {this.state.isSaving ? '저장 중...' : '저장'}
+                            </Button>
+                        )}
                         {this.props.canShare ? (
                             (this.props.isShowingProject || this.props.isUpdating) && (
                                 <ProjectWatcher onDoneUpdating={this.props.onSeeCommunity}>
@@ -686,22 +748,7 @@ class MenuBar extends React.Component {
                             </MenuBarItemTooltip>
                         ) : [])}
                     </div>
-                    <Divider className={classNames(styles.divider)} />
-                    <div className={styles.fileGroup}>
-                        <div
-                            aria-label={this.props.intl.formatMessage(ariaMessages.tutorials)}
-                            className={classNames(styles.menuBarItem, styles.hoverable)}
-                            onClick={this.props.onOpenTipLibrary}
-                        >
-                            <img
-                                className={styles.helpIcon}
-                                src={helpIcon}
-                            />
-                            <span className={styles.tutorialsLabel}>
-                                <FormattedMessage {...ariaMessages.tutorials} />
-                            </span>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* show the proper UI in the account menu, given whether the user is
@@ -732,16 +779,8 @@ class MenuBar extends React.Component {
                                 </a>
                                 <AccountNav
                                     className={classNames(
-                                        styles.menuBarItem,
-                                        styles.hoverable,
-                                        {[styles.active]: this.props.accountMenuOpen}
+                                        styles.menuBarItem
                                     )}
-                                    isOpen={this.props.accountMenuOpen}
-                                    isRtl={this.props.isRtl}
-                                    menuBarMenuClassName={classNames(styles.menuBarMenu)}
-                                    onClick={this.props.onClickAccount}
-                                    onClose={this.props.onRequestCloseAccount}
-                                    onLogOut={this.props.onLogOut}
                                 />
                             </React.Fragment>
                         ) : (
