@@ -621,6 +621,43 @@ class MenuBar extends React.Component {
                                             </MenuItem>
                                         )}</SB3Downloader>
                                     </MenuSection>
+                                    {/* 서버 저장/불러오기 메뉴 - 로그인 시에만 표시 */}
+                                    {this.props.sessionExists && this.props.username && (
+                                        <MenuSection>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    this.props.onRequestCloseFile();
+                                                    this.props.onOpenMyProjects();
+                                                }}
+                                            >
+                                                <FormattedMessage
+                                                    defaultMessage="Load from server"
+                                                    description="Menu bar item for loading project from server"
+                                                    id="gui.menuBar.loadFromServer"
+                                                />
+                                            </MenuItem>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    this.props.onRequestCloseFile();
+                                                    this.handleClickSaveToServer();
+                                                }}
+                                            >
+                                                {this.state.isSaving ? (
+                                                    <FormattedMessage
+                                                        defaultMessage="Saving..."
+                                                        description="Menu bar item while saving"
+                                                        id="gui.menuBar.savingToServer"
+                                                    />
+                                                ) : (
+                                                    <FormattedMessage
+                                                        defaultMessage="Save to server"
+                                                        description="Menu bar item for saving project to server"
+                                                        id="gui.menuBar.saveToServer"
+                                                    />
+                                                )}
+                                            </MenuItem>
+                                        </MenuSection>
+                                    )}
                                 </MenuBarMenu>
                             </div>
                         )}
@@ -744,15 +781,6 @@ class MenuBar extends React.Component {
                         />
                     ) : null)}
                     <div className={classNames(styles.menuBarItem)}>
-                        {/* 저장 버튼 - 로그인 상태에서만 표시 */}
-                        {this.props.sessionExists && this.props.username && (
-                            <Button
-                                className={classNames(styles.menuBarButton, styles.saveButton)}
-                                onClick={this.handleClickSaveToServer}
-                            >
-                                {this.state.isSaving ? '저장 중...' : '저장'}
-                            </Button>
-                        )}
                         {this.props.canShare ? (
                             (this.props.isShowingProject || this.props.isUpdating) && (
                                 <ProjectWatcher onDoneUpdating={this.props.onSeeCommunity}>
@@ -819,19 +847,6 @@ class MenuBar extends React.Component {
                         this.props.username ? (
                             // ************ user is logged in ************
                             <React.Fragment>
-                                <div
-                                    className={classNames(
-                                        styles.menuBarItem,
-                                        styles.hoverable,
-                                        styles.mystuffButton
-                                    )}
-                                    onClick={this.props.onOpenMyProjects}
-                                >
-                                    <img
-                                        className={styles.mystuffIcon}
-                                        src={mystuffIcon}
-                                    />
-                                </div>
                                 <AccountNav
                                     className={classNames(
                                         styles.menuBarItem
