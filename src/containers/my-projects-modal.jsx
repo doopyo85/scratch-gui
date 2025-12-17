@@ -6,6 +6,7 @@ import VM from 'scratch-vm';
 
 import MyProjectsModalComponent from '../components/my-projects-modal/my-projects-modal.jsx';
 import {closeMyProjectsModal} from '../reducers/modals';
+import {setLoadedProject} from '../reducers/loaded-project';
 
 class MyProjectsModal extends React.Component {
     constructor (props) {
@@ -91,8 +92,8 @@ class MyProjectsModal extends React.Component {
             // VM에 프로젝트 로드
             await this.props.vm.loadProject(projectData);
             
-            // 프로젝트 제목 설정 (Redux action이 있다면)
-            // this.props.onSetProjectTitle(project.title);
+            // Redux에 불러온 프로젝트 정보 저장 (덮어쓰기 저장용)
+            this.props.onSetLoadedProject(project.fileId, project.title);
             
             alert(`"${project.title}" 프로젝트를 불러왔습니다!`);
             this.handleClose();
@@ -164,7 +165,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onClose: () => dispatch(closeMyProjectsModal())
+    onClose: () => dispatch(closeMyProjectsModal()),
+    onSetLoadedProject: (fileId, title) => dispatch(setLoadedProject(fileId, title))
 });
 
 export default connect(

@@ -49,6 +49,12 @@ import {
     saveProjectAsCopy
 } from '../../reducers/project-state';
 import {
+    setLoadedProject,
+    clearLoadedProject,
+    getLoadedProjectFileId,
+    getLoadedProjectTitle
+} from '../../reducers/loaded-project';
+import {
     openAboutMenu,
     closeAboutMenu,
     aboutMenuOpen,
@@ -260,7 +266,7 @@ class MenuBar extends React.Component {
         });
     }
     
-    // S3 서버에 프로젝트 저장
+    // S3 서버에 프로젝트 저장 (새 저장 또는 덮어쓰기)
     async handleClickSaveToServer () {
         if (this.state.isSaving) return;
         
@@ -289,17 +295,32 @@ class MenuBar extends React.Component {
             
             console.log('Base64 변환 완료, 전송 시작...');
             
-            // JSON으로 서버에 전송
-            const response = await fetch('/api/scratch/save-project', {
-                method: 'POST',
+            // fileId 유무에 따라 새 저장(POST) 또는 덮어쓰기(PUT) 결정
+            const existingFileId = this.props.loadedProjectFileId;
+            const isUpdate = existingFileId !== null;
+            
+            console.log(isUpdate ? `기존 프로젝트 업데이트 (fileId: ${existingFileId})` : '새 프로젝트 저장');
+            
+            let url, method;
+            if (isUpdate) {
+                // 덮어쓰기: PUT 요청
+                url = `/api/scratch/save-project/${existingFileId}`;
+                method = 'PUT';
+            } else {
+                // 새 저장: POST 요청
+                url = '/api/scratch/save-project';
+                method = 'POST';
+            }
+            
+            const response = await fetch(url, {
+                method: method,
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     projectData: base64Data,
-                    title: projectTitle,
-                    isNew: true
+                    title: projectTitle
                 })
             });
             
@@ -311,7 +332,12 @@ class MenuBar extends React.Component {
             const result = await response.json();
             
             if (result.success) {
-                alert('프로젝트가 저장되었습니다!');
+                // 새 저장인 경우, 반환된 fileId를 Redux에 저장
+                if (!isUpdate && result.fileId) {
+                    this.props.onSetLoadedProject(result.fileId, projectTitle);
+                    console.log('새 프로젝트 fileId 저장:', result.fileId);
+                }
+                alert(isUpdate ? '프로젝트가 업데이트되었습니다!' : '프로젝트가 저장되었습니다!');
             } else {
                 alert('저장 실패: ' + (result.message || '알 수 없는 오류'));
             }
@@ -936,6 +962,7 @@ MenuBar.propTypes = {
     isShowingProject: PropTypes.bool,
     isTotallyNormal: PropTypes.bool,
     isUpdating: PropTypes.bool,
+    loadedProjectFileId: PropTypes.number,
     locale: PropTypes.string.isRequired,
     loginMenuOpen: PropTypes.bool,
     logo: PropTypes.string,
@@ -979,6 +1006,8 @@ MenuBar.propTypes = {
     onRequestCloseSettings: PropTypes.func,
     onRequestOpenAbout: PropTypes.func,
     onSeeCommunity: PropTypes.func,
+    onSetLoadedProject: PropTypes.func,
+    onClearLoadedProject: PropTypes.func,
     onSetTimeTravelMode: PropTypes.func,
     onShare: PropTypes.func,
     onStartSelectingFileUpload: PropTypes.func,
@@ -1024,6 +1053,7 @@ const mapStateToProps = (state, ownProps) => {
         userOwnsProject: ownProps.authorUsername && user &&
             (ownProps.authorUsername === user.username),
         vm: state.scratchGui.vm,
+        loadedProjectFileId: getLoadedProjectFileId(state),
         mode220022BC: isTimeTravel220022BC(state),
         mode1920: isTimeTravel1920(state),
         mode1990: isTimeTravel1990(state),
@@ -1055,7 +1085,9 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),
-    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode))
+    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode)),
+    onSetLoadedProject: (fileId, title) => dispatch(setLoadedProject(fileId, title)),
+    onClearLoadedProject: () => dispatch(clearLoadedProject())
 });
 
 export default compose(

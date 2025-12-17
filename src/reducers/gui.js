@@ -29,6 +29,7 @@ import vmReducer, {vmInitialState} from './vm';
 import vmStatusReducer, {vmStatusInitialState} from './vm-status';
 import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace-metrics';
 import sessionReducer, {sessionInitialState} from './session';
+import loadedProjectReducer, {loadedProjectInitialState} from './loaded-project';
 import throttle from 'redux-throttle';
 
 import decks from '../lib/libraries/decks/index.jsx';
@@ -65,7 +66,8 @@ const guiInitialState = {
     vm: vmInitialState,
     vmStatus: vmStatusInitialState,
     workspaceMetrics: workspaceMetricsInitialState,
-    session: sessionInitialState
+    session: sessionInitialState,
+    loadedProject: loadedProjectInitialState
 };
 
 const initPlayer = function (currentState) {
@@ -165,7 +167,8 @@ const guiReducer = combineReducers({
     vm: vmReducer,
     vmStatus: vmStatusReducer,
     workspaceMetrics: workspaceMetricsReducer,
-    session: sessionReducer
+    session: sessionReducer,
+    loadedProject: loadedProjectReducer
 });
 
 export {
