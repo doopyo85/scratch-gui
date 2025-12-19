@@ -226,31 +226,52 @@ const ProjectSaverHOC = function (WrappedComponent) {
             // serialized project refers to a newer asset than what
             // we just finished saving).
             const savedVMState = this.props.vm.toJSON();
-            return Promise.all(this.props.vm.assets
-                .filter(asset => !asset.clean)
-                .map(
-                    asset => storage.store(
-                        asset.assetType,
-                        asset.dataFormat,
-                        asset.data,
-                        asset.assetId
-                    ).then(response => {
-                        // Asset servers respond with {status: ok} for successful POSTs
-                        if (response.status !== 'ok') {
-                            // Errors include a `code` property, e.g. "Forbidden"
-                            return Promise.reject(response.code);
-                        }
-                        asset.clean = true;
-                    })
+            
+            // 🔥 썸네일 캐철 (Promise 반환)
+            const getThumbnailPromise = new Promise((resolve) => {
+                try {
+                    this.getProjectThumbnail(dataURI => {
+                        resolve(dataURI);
+                    });
+                } catch (e) {
+                    log.warn('Thumbnail capture failed:', e);
+                    resolve(null);
+                }
+            });
+            
+            return Promise.all([
+                getThumbnailPromise,
+                Promise.all(this.props.vm.assets
+                    .filter(asset => !asset.clean)
+                    .map(
+                        asset => storage.store(
+                            asset.assetType,
+                            asset.dataFormat,
+                            asset.data,
+                            asset.assetId
+                        ).then(response => {
+                            // Asset servers respond with {status: ok} for successful POSTs
+                            if (response.status !== 'ok') {
+                                // Errors include a `code` property, e.g. "Forbidden"
+                                return Promise.reject(response.code);
+                            }
+                            asset.clean = true;
+                        })
+                    )
                 )
-            )
-                .then(() => this.props.onUpdateProjectData(projectId, savedVMState, requestParams))
+            ])
+                .then(([thumbnailDataURI]) => {
+                    // 🔥 썸네일을 requestParams에 추가
+                    const paramsWithThumbnail = {
+                        ...requestParams,
+                        title: this.props.reduxProjectTitle,
+                        thumbnailBase64: thumbnailDataURI,
+                        isAutoSave: !requestParams.isCopy && !requestParams.isRemix
+                    };
+                    return this.props.onUpdateProjectData(projectId, savedVMState, paramsWithThumbnail);
+                })
                 .then(response => {
                     this.props.onSetProjectUnchanged();
-                    const id = response.id.toString();
-                    if (id && this.props.onUpdateProjectThumbnail) {
-                        this.storeProjectThumbnail(id);
-                    }
                     this.reportTelemetryEvent('projectDidSave');
                     return response;
                 })
@@ -398,7 +419,7 @@ const ProjectSaverHOC = function (WrappedComponent) {
         vm: PropTypes.instanceOf(VM).isRequired
     };
     ProjectSaverComponent.defaultProps = {
-        autoSaveIntervalSecs: 600, // 10 minutes = 600 seconds
+        autoSaveIntervalSecs: 120, // 🔥 2 minutes = 120 seconds (codingnplay 자동저장)
         onRemixing: () => {},
         onSetProjectThumbnailer: () => {},
         onSetProjectSaver: () => {},

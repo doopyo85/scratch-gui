@@ -293,6 +293,27 @@ class MenuBar extends React.Component {
             console.log('Base64 변환 중...');
             const base64Data = await this.blobToBase64(projectBlob);
             
+            // 썸네일 캐치 시도
+            let thumbnailBase64 = null;
+            try {
+                if (this.props.vm && this.props.vm.renderer) {
+                    // 스테이지 크기 가져오기 (480x360 또는 실제 크기)
+                    const canvas = this.props.vm.renderer.canvas;
+                    if (canvas) {
+                        // 4:3 비율 썸네일 생성 (240x180)
+                        const thumbnailCanvas = document.createElement('canvas');
+                        thumbnailCanvas.width = 240;
+                        thumbnailCanvas.height = 180;
+                        const ctx = thumbnailCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+                        thumbnailBase64 = thumbnailCanvas.toDataURL('image/png');
+                        console.log('썸네일 캘처 완료');
+                    }
+                }
+            } catch (thumbErr) {
+                console.warn('썸네일 캘처 실패 (무시하고 계속):', thumbErr);
+            }
+            
             console.log('Base64 변환 완료, 전송 시작...');
             
             // fileId 유무에 따라 새 저장(POST) 또는 덮어쓰기(PUT) 결정
@@ -320,7 +341,8 @@ class MenuBar extends React.Component {
                 },
                 body: JSON.stringify({
                     projectData: base64Data,
-                    title: projectTitle
+                    title: projectTitle,
+                    thumbnail: thumbnailBase64
                 })
             });
             

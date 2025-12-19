@@ -73,7 +73,21 @@ const MyProjectsModal = ({
                             className={styles.projectCard}
                         >
                             <div className={styles.projectThumbnail}>
-                                <div className={styles.thumbnailPlaceholder}>
+                                {project.thumbnailUrl ? (
+                                    <img 
+                                        src={project.thumbnailUrl} 
+                                        alt={project.title || '프로젝트 썸네일'}
+                                        className={styles.thumbnailImage}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                ) : null}
+                                <div 
+                                    className={styles.thumbnailPlaceholder}
+                                    style={{ display: project.thumbnailUrl ? 'none' : 'flex' }}
+                                >
                                     🐱
                                 </div>
                             </div>
@@ -141,7 +155,8 @@ MyProjectsModal.propTypes = {
         fileId: PropTypes.number.isRequired,
         title: PropTypes.string,
         size: PropTypes.number,
-        createdAt: PropTypes.string
+        createdAt: PropTypes.string,
+        thumbnailUrl: PropTypes.string
     })),
     isLoading: PropTypes.bool,
     error: PropTypes.string,

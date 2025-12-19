@@ -164,10 +164,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.thumbnailImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .thumbnailPlaceholder {
     font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .projectInfo {
