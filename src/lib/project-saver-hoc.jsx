@@ -50,7 +50,8 @@ const ProjectSaverHOC = function (WrappedComponent) {
             bindAll(this, [
                 'getProjectThumbnail',
                 'leavePageConfirm',
-                'tryToAutoSave'
+                'tryToAutoSave',
+                'sendSessionHeartbeat'
             ]);
         }
         componentWillMount () {
@@ -273,6 +274,12 @@ const ProjectSaverHOC = function (WrappedComponent) {
                 .then(response => {
                     this.props.onSetProjectUnchanged();
                     this.reportTelemetryEvent('projectDidSave');
+                    
+                    // 🔥 자동저장 성공 시 세션 heartbeat 전송
+                    if (!requestParams.isCopy && !requestParams.isRemix) {
+                        this.sendSessionHeartbeat();
+                    }
+                    
                     return response;
                 })
                 .catch(err => {
@@ -322,6 +329,42 @@ const ProjectSaverHOC = function (WrappedComponent) {
                 log.error('Telemetry error', event, e);
                 // This is intentionally fire/forget because a failure
                 // to report telemetry should not block saving
+            }
+        }
+
+        /**
+         * 🔥 자동저장 후 세션 heartbeat 전송 (3000번 서버로)
+         * 세션 TTL을 연장하여 장시간 작업 중 세션 만료 방지
+         */
+        sendSessionHeartbeat () {
+            try {
+                fetch('/api/session/heartbeat', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        platform: 'scratch',
+                        timestamp: new Date().toISOString()
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            log.log('💓 [Scratch] 세션 Heartbeat 전송 완료 (자동저장 후)');
+                        } else {
+                            response.json().then(data => {
+                                if (data.needsLogin) {
+                                    log.warn('⚠️ [Scratch] 세션 만료됨 - 재로그인 필요');
+                                }
+                            }).catch(() => {});
+                        }
+                    })
+                    .catch(err => {
+                        log.warn('❌ [Scratch] Heartbeat 전송 실패:', err);
+                    });
+            } catch (e) {
+                log.warn('Heartbeat error:', e);
             }
         }
 
@@ -419,7 +462,7 @@ const ProjectSaverHOC = function (WrappedComponent) {
         vm: PropTypes.instanceOf(VM).isRequired
     };
     ProjectSaverComponent.defaultProps = {
-        autoSaveIntervalSecs: 120, // 🔥 2 minutes = 120 seconds (codingnplay 자동저장)
+        autoSaveIntervalSecs: 300, // 🔥 5 minutes = 300 seconds (codingnplay 자동저장)
         onRemixing: () => {},
         onSetProjectThumbnailer: () => {},
         onSetProjectSaver: () => {},
