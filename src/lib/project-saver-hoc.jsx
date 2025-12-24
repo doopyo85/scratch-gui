@@ -306,12 +306,41 @@ const ProjectSaverHOC = function (WrappedComponent) {
         }
 
         getProjectThumbnail (callback) {
-            this.props.vm.postIOData('video', {forceTransparentPreview: true});
-            this.props.vm.renderer.requestSnapshot(dataURI => {
-                this.props.vm.postIOData('video', {forceTransparentPreview: false});
-                callback(dataURI);
-            });
-            this.props.vm.renderer.draw();
+            // 🔥 렌더링 완료 보장을 위한 지연 추가
+            const captureSnapshot = () => {
+                try {
+                    if (!this.props.vm.renderer) {
+                        log.warn('Renderer not available for thumbnail capture');
+                        callback(null);
+                        return;
+                    }
+                    
+                    this.props.vm.postIOData('video', {forceTransparentPreview: true});
+                    
+                    // 먼저 렌더링 강제 실행
+                    this.props.vm.renderer.draw();
+                    
+                    // 약간의 지연 후 스냅샷 캡처
+                    setTimeout(() => {
+                        this.props.vm.renderer.requestSnapshot(dataURI => {
+                            this.props.vm.postIOData('video', {forceTransparentPreview: false});
+                            callback(dataURI);
+                        });
+                    }, 100); // 100ms 대기
+                } catch (e) {
+                    log.warn('Thumbnail capture error:', e);
+                    callback(null);
+                }
+            };
+            
+            // 첫 프레임이 렌더링될 시간을 주기 위해 requestAnimationFrame 사용
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(captureSnapshot);
+                });
+            } else {
+                setTimeout(captureSnapshot, 50);
+            }
         }
 
         /**
