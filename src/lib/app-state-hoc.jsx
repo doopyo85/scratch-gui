@@ -99,7 +99,7 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
         fetchSessionFromServer () {
             const {setSession} = require('../reducers/session');
             
-            fetch('/api/auth/session', {
+            fetch('/api/scratch/auth/session', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
