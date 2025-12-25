@@ -185,6 +185,8 @@ class MenuBar extends React.Component {
             'handleClickSeeCommunity',
             'handleClickShare',
             'handleClickSaveToServer',
+            'handleClickShareToGallery',
+            'checkGalleryStatus',
             'blobToBase64',
             'handleSetMode',
             'handleKeyPress',
@@ -194,7 +196,9 @@ class MenuBar extends React.Component {
         ]);
         
         this.state = {
-            isSaving: false
+            isSaving: false,
+            isSharing: false,
+            isPublic: false
         };
     }
     componentDidMount () {
@@ -368,6 +372,72 @@ class MenuBar extends React.Component {
             alert('저장 중 오류가 발생했습니다: ' + error.message);
         } finally {
             this.setState({ isSaving: false });
+        }
+    }
+    
+    // 갤러리 공개 상태 확인
+    async checkGalleryStatus () {
+        const fileId = this.props.loadedProjectFileId;
+        if (!fileId) return;
+        
+        try {
+            const response = await fetch(`/api/scratch/project/${fileId}/status`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.setState({ isPublic: data.isPublic });
+                }
+            }
+        } catch (error) {
+            console.warn('갤러리 상태 확인 실패:', error);
+        }
+    }
+    
+    // 갤러리 공유 토글
+    async handleClickShareToGallery () {
+        const fileId = this.props.loadedProjectFileId;
+        
+        if (!fileId) {
+            alert('먼저 프로젝트를 서버에 저장해주세요.');
+            return;
+        }
+        
+        if (this.state.isSharing) return;
+        
+        this.setState({ isSharing: true });
+        
+        try {
+            const response = await fetch(`/api/scratch/share/${fileId}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `서버 응답 오류: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.setState({ isPublic: result.isPublic });
+                alert(result.isPublic ? 
+                    '🌐 프로젝트가 갤러리에 공개되었습니다!' : 
+                    '🔒 프로젝트가 비공개로 전환되었습니다.');
+            } else {
+                alert('공유 설정 실패: ' + (result.message || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Share to gallery error:', error);
+            alert('공유 설정 중 오류가 발생했습니다: ' + error.message);
+        } finally {
+            this.setState({ isSharing: false });
+            this.props.onRequestCloseFile();
         }
     }
     handleSetMode (mode) {
@@ -678,6 +748,20 @@ class MenuBar extends React.Component {
                                                     />
                                                 )}
                                             </MenuItem>
+                                            {/* 갤러리 공유 버튼 - 저장된 프로젝트만 */}
+                                            {this.props.loadedProjectFileId && (
+                                                <MenuItem
+                                                    onClick={this.handleClickShareToGallery}
+                                                >
+                                                    {this.state.isSharing ? (
+                                                        <span>⏳ 처리중...</span>
+                                                    ) : this.state.isPublic ? (
+                                                        <span>🌐 갤러리 공개 해제</span>
+                                                    ) : (
+                                                        <span>🎨 갤러리에 공유</span>
+                                                    )}
+                                                </MenuItem>
+                                            )}
                                         </MenuSection>
                                     )}
                                 </MenuBarMenu>
