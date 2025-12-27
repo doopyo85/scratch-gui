@@ -4,6 +4,10 @@ import {intlShape, injectIntl} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
+import queryString from 'query-string';
+
+// 🔥 fileId 매핑을 위한 import
+import { setFileId } from './save-project-to-server';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
     LoadingStates,
@@ -95,9 +99,44 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         
         componentDidMount() {
             const urlHash = window.location.hash;
+            
+            // 🔥 URL 파라미터에서 fileId 추출 및 등록
+            this.registerFileIdFromUrl();
+            
             if (urlHash.startsWith('#http')) {
                 const projectUrl = urlHash.substring(1);
                 this.fetchProject(null, this.props.loadingState);
+            }
+        }
+        
+        /**
+         * 🔥 URL 파라미터에서 fileId를 추출하여 매핑 등록
+         * URL 형식: /scratch/?fileId=123&projectId=xxx#https://s3...scratch.sb3
+         */
+        registerFileIdFromUrl() {
+            try {
+                const queryParams = queryString.parse(window.location.search);
+                const fileId = queryParams.fileId;
+                const projectId = queryParams.projectId || this.props.projectId;
+                
+                if (fileId && projectId) {
+                    setFileId(projectId, parseInt(fileId, 10));
+                    console.log(`📎 [Scratch] URL에서 fileId 등록: projectId=${projectId}, fileId=${fileId}`);
+                } else if (fileId) {
+                    // projectId가 없으면 해시에서 추출 시도
+                    const urlHash = window.location.hash;
+                    if (urlHash.startsWith('#http')) {
+                        // S3 URL에서 projectId 추출 (예: scratch_1735123456789.sb3)
+                        const match = urlHash.match(/scratch_([\d]+)\.sb3/);
+                        if (match) {
+                            const extractedProjectId = match[1];
+                            setFileId(extractedProjectId, parseInt(fileId, 10));
+                            console.log(`📎 [Scratch] URL 해시에서 projectId 추출 후 fileId 등록: projectId=${extractedProjectId}, fileId=${fileId}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ [Scratch] URL에서 fileId 추출 실패:', error);
             }
         }
 
