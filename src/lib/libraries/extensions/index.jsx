@@ -46,7 +46,33 @@ import gdxforInsetIconURL from './gdxfor/gdxfor-small.svg';
 import gdxforConnectionIconURL from './gdxfor/gdxfor-illustration.svg';
 import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
+import tm2scratchIconURL from './tm2scratch/tm2scratch.png';
+import tm2scratchInsetIconURL from './tm2scratch/tm2scratch-small.png';
+
 export default [
+    {
+        name: 'TM2Scratch',
+        extensionId: 'tm2scratch',
+        collaborator: 'Tsukurusha, YengawaLab and Google',
+        iconURL: tm2scratchIconURL,
+        insetIconURL: tm2scratchInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="나의 이미지와 소리를 인식해볼까요"
+                description="Recognize your own images and sounds."
+                id="gui.extension.tm2scratchblocks.description"
+            />
+        ),
+        featured: true,
+        disabled: false,
+        internetConnectionRequired: true,
+        bluetoothRequired: false,
+        translationMap: {
+            'ko': {'gui.extension.tm2scratchblocks.description': '나의 이미지와 소리를 인식해볼까요'},
+            'en': {'gui.extension.tm2scratchblocks.description': 'Recognize your own images and sounds.'},
+            'ja': {'gui.extension.tm2scratchblocks.description': '画像や音声を学習させよう。'}
+        }
+    },
     {
         name: (
             <FormattedMessage
