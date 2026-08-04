@@ -48,6 +48,8 @@ import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
 import tm2scratchIconURL from './tm2scratch/tm2scratch.png';
 import tm2scratchInsetIconURL from './tm2scratch/tm2scratch-small.png';
+import ml2scratchIconURL from './ml2scratch/ml2scratch.png';
+import ml2scratchInsetIconURL from './ml2scratch/ml2scratch-small.png';
 
 export default [
     {
@@ -71,6 +73,29 @@ export default [
             'ko': {'gui.extension.tm2scratchblocks.description': '나의 이미지와 소리를 인식해볼까요'},
             'en': {'gui.extension.tm2scratchblocks.description': 'Recognize your own images and sounds.'},
             'ja': {'gui.extension.tm2scratchblocks.description': '画像や音声を学習させよう。'}
+        }
+    },
+    {
+        name: 'ML2Scratch',
+        extensionId: 'ml2scratch',
+        collaborator: 'champierre',
+        iconURL: ml2scratchIconURL,
+        insetIconURL: ml2scratchInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="이미지를 학습시켜 분류해볼까요"
+                description="Classify images with machine learning."
+                id="gui.extension.ml2scratchblocks.description"
+            />
+        ),
+        featured: true,
+        disabled: false,
+        internetConnectionRequired: true,
+        bluetoothRequired: false,
+        translationMap: {
+            'ko': {'gui.extension.ml2scratchblocks.description': '이미지를 학습시켜 분류해볼까요'},
+            'en': {'gui.extension.ml2scratchblocks.description': 'Classify images with machine learning.'},
+            'ja': {'gui.extension.ml2scratchblocks.description': '画像を学習して分類しよう。'}
         }
     },
     {

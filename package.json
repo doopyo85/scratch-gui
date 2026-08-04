@@ -61,6 +61,7 @@
     "lodash.omit": "^4.5.0",
     "lodash.throttle": "^4.0.1",
     "minilog": "^3.1.0",
+    "ml5": "^0.12.2",
     "omggif": "^1.0.9",
     "papaparse": "^5.3.0",
     "postcss-import": "^12.0.0",
